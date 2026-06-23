@@ -52,7 +52,7 @@ def chat(req: ChatRequest):
 def chat(payload: dict):
     return {
         "reply": "stub response - AI 연결 전 임시 응답",
-        "s_id": payload.get("session_id", "temp-session"),
+        "s_id": payload.get("s_id", "temp-session"),
         "status": "ok"
     }
 
