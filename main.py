@@ -23,20 +23,20 @@ def root():
 @app.get("/scenarios")
 def get_scenarios():
     return [
-        {"s_id": s["s_id"], "title": s["title"], "category": s["category"]}
+        {"id": s["id"], "title": s["title"], "category": s["category"]}
         for s in scenarios
     ]
 
-@app.get("/scenarios/{s_id}")
-def get_scenario(scenario_id: str):
+@app.get("/scenarios/{id}")
+def get_scenario(id: str):
     for s in scenarios:
-        if s["s_id"] == scenario_id:
+        if s["id"] == id:
             return s
     return {"error": "not found"}
 
 #AI 챗
 class ChatRequest(BaseModel):
-    s_id: str
+    id: str
     message: str
 
 """
@@ -52,7 +52,7 @@ def chat(req: ChatRequest):
 def chat(payload: dict):
     return {
         "reply": "stub response - AI 연결 전 임시 응답",
-        "s_id": payload.get("s_id", "temp-session"),
+        "id": payload.get("id", "temp-session"),
         "status": "ok"
     }
 
