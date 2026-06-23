@@ -18,7 +18,7 @@ with open("data/scenarios.json", "r", encoding="utf-8") as f:
 
 @app.get("/")
 def root():
-    return {"message": "Backend is running"}
+    return {"message": "server is running"}
 
 @app.get("/scenarios")
 def get_scenarios():
