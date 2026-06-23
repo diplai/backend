@@ -39,7 +39,7 @@ class ChatRequest(BaseModel):
     s_id: str
     message: str
 
-
+"""
 @app.post("/chat")
 def chat(req: ChatRequest):
     return {
@@ -47,6 +47,7 @@ def chat(req: ChatRequest):
         "message": "이건 임시 응답입니다. AI 붙이면 여기서 LLM 호출됨"
     }
 """
+
 @app.post("/chat")
 def chat(payload: dict):
     return {
@@ -54,9 +55,8 @@ def chat(payload: dict):
         "s_id": payload.get("session_id", "temp-session"),
         "status": "ok"
     }
-"""
-#리포트
 
+#리포트
 @app.post("/report")
 def report(req: ChatRequest):
     return {
@@ -64,13 +64,4 @@ def report(req: ChatRequest):
         "missed_issues": [],
         "used_treaties": []
     }
-"""
-@app.post("/report")
-def report(payload: dict):
-    return {
-        "user_summary": "임시 요약 - chat 기반 분석 전 상태",
-        "actual_result": "미구현 상태 (AI 분석 연결 필요)",
-        "missed_issues": ["AI 분석 로직 없음"],
-        "used_evidence": []
-    }
-"""
+
