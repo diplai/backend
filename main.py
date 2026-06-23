@@ -16,6 +16,10 @@ app.add_middleware(
 with open("data/scenarios.json", "r", encoding="utf-8") as f:
     scenarios = json.load(f)
 
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
+
 @app.get("/scenarios")
 def get_scenarios():
     return [
