@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-with open("data/test.json", "r", encoding="utf-8") as f:
+with open("data/scenarios.json", "r", encoding="utf-8") as f:
     scenarios = json.load(f)
 
 @app.get("/")
