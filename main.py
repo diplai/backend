@@ -23,7 +23,7 @@ def root():
 @app.get("/scenarios")
 def get_scenarios():
     return [
-        {"id": s["id"], "title": s["title"], "category": s["category"]}
+        {"id": s["id"], "title": s["title"], "field": s["field"]}
         for s in scenarios
     ]
 
