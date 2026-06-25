@@ -17,24 +17,6 @@ client = Groq(
 
 app = FastAPI()
 
-@app.get("/test-ai")
-def test_ai():
-
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {
-                "role": "user",
-                "content": "안녕하세요"
-            }
-        ]
-    )
-
-    return {
-        "reply": response.choices[0].message.content
-    }
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
