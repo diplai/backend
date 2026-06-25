@@ -88,17 +88,26 @@ def chat(req: ChatRequest):
         "id": req.id,
         "status": "ok"
     }
-"""
-#리포트
-@app.post("/report")
-def report(req: ChatRequest):
-    return {
-        "summary": "협상 결과 요약 (임시)",
-        "missed_issues": [],
-        "used_treaties": []
-    }
-"""
 
 @app.get("/report/{id}")
 def report(id: str):
-    return {"id": id}
+    return {
+        "summary": "",
+        "koreaClaims": [],
+        "aiRebuttals": [],
+        "flow": "",
+        "actualResult": "", # -> 만들어 둬야 할지?
+        "references": [], 
+        "missed": [],
+        "insufficient": [],
+        "overlooked": [],
+        "expressionRisk": [],
+        "betterDirection": [],
+        "scores": {
+            "evidence": 0,
+            "expression": 0,
+            "strategy": 0,
+            "perspective": 0
+        }
+
+    }
