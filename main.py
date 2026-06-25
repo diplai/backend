@@ -12,7 +12,7 @@ load_dotenv()
 from groq import Groq
 
 client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
+    api_key=os.getenv("OPENAI_KEY")
 )
 
 app = FastAPI()
@@ -84,10 +84,35 @@ def chat(req: ChatRequest):
 """
 
 @app.post("/chat")
-def chat(payload: dict):
+def chat(req: ChatRequest):
+
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "system",
+                "content": """
+너는 외교 협상 시뮬레이터의 상대국 대표다.
+
+- 외교적이고 정중한 어조를 사용한다.
+- 사용자의 의견을 무조건 수용하지 않는다.
+- 국가 이익을 우선 고려한다.
+- 실제 외교 협상처럼 답변한다.
+- 답변은 3~5문장 정도로 작성한다.
+"""
+            },
+            {
+                "role": "user",
+                "content": req.message
+            }
+        ]
+    )
+
+    reply = completion.choices[0].message.content
+
     return {
-        "reply": "stub response - AI 연결 전 임시 응답",
-        "id": payload.get("id", "temp-session"),
+        "reply": reply,
+        "id": req.id,
         "status": "ok"
     }
 
