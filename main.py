@@ -3,7 +3,37 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 from pydantic import BaseModel
 
+# AI
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+from groq import Groq
+
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
+
 app = FastAPI()
+
+@app.get("/test-ai")
+def test_ai():
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": "안녕하세요"
+            }
+        ]
+    )
+
+    return {
+        "reply": response.choices[0].message.content
+    }
+
 
 app.add_middleware(
     CORSMiddleware,
