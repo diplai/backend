@@ -56,15 +56,6 @@ class ChatRequest(BaseModel):
     id: str
     message: str
 
-"""
-@app.post("/chat")
-def chat(req: ChatRequest):
-    return {
-        "role": "opponent",
-        "message": "이건 임시 응답입니다. AI 붙이면 여기서 LLM 호출됨"
-    }
-"""
-
 @app.post("/chat")
 def chat(req: ChatRequest):
 
@@ -97,7 +88,7 @@ def chat(req: ChatRequest):
         "id": req.id,
         "status": "ok"
     }
-
+"""
 #리포트
 @app.post("/report")
 def report(req: ChatRequest):
@@ -106,4 +97,8 @@ def report(req: ChatRequest):
         "missed_issues": [],
         "used_treaties": []
     }
+"""
 
+@app.get("/report/{id}")
+def report(id: str):
+    return {"id": id}
