@@ -20,6 +20,11 @@ with open("data/scenarios.json", "r", encoding="utf-8") as f:
 def root():
     return {"message": "server is running"}
 
+# ping
+@app.get("/ping")
+def ping():
+    return {"status": "alive"}
+
 @app.get("/scenarios")
 def get_scenarios():
     return [
