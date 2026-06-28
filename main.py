@@ -46,6 +46,9 @@ def get_scenarios():
 
 @app.get("/scenarios/{id}")
 def get_scenario(id: str):
+
+    scenario = next((s for s in scenarios if s["id"] == id), None)
+
     for s in scenarios:
         if s["id"] == id:
              return {
@@ -166,6 +169,8 @@ def chat(req: ChatRequest):
 @app.get("/report/{id}") 
 def report(id: str):
 
+    history = chat_store.get(id, [])
+
     print(chat_store)
     print(history)
 
@@ -174,7 +179,6 @@ def report(id: str):
     if scenario is None:
         return {"error": "Scenario not found"}
 
-    history = chat_store.get(id, [])
     print("history =", history)
 
     if not history:
