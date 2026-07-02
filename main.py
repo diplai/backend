@@ -150,7 +150,7 @@ def chat(req: ChatRequest):
         messages=messages,
         temperature=0.2,
         top_p=0.95,
-        max_tokens=700,
+        max_tokens=200,
         extra_body={"chat_template_kwargs": {"thinking": False}},
     )
     
@@ -286,6 +286,7 @@ def report(id: str):
         temperature=0.2,
         top_p=0.95,
         extra_body={"chat_template_kwargs": {"thinking": False}},
+        max_tokens=2000,
     )
 
     response = completion.choices[0].message.content
