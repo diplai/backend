@@ -9,10 +9,11 @@ import os
 
 load_dotenv()
 
-from groq import Groq
+from openai import OpenAI
 
-client = Groq(
-    api_key=os.getenv("OPENAI_KEY")
+client = OpenAI(
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key=os.getenv("NVIDIA_API_KEY")
 )
 
 app = FastAPI()
@@ -145,10 +146,12 @@ def chat(req: ChatRequest):
                 })
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.2,
-            max_completion_tokens=700
+        model="deepseek-ai/deepseek-v4-pro",
+        messages=messages,
+        temperature=0.2,
+        top_p=0.95,
+        max_tokens=700,
+        extra_body={"chat_template_kwargs": {"thinking": False}},
     )
     
     reply = completion.choices[0].message.content
@@ -278,10 +281,11 @@ def report(id: str):
         ]
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="deepseek-ai/deepseek-v4-pro",
         messages=messages,
         temperature=0.2,
-        max_completion_tokens=700
+        top_p=0.95,
+        extra_body={"chat_template_kwargs": {"thinking": False}},
     )
 
     response = completion.choices[0].message.content
