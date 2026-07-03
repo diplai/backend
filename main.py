@@ -6,6 +6,7 @@ from pydantic import BaseModel
 # AI
 from dotenv import load_dotenv
 import os
+from fastapi.responses import StreamingResponse
 
 load_dotenv()
 
@@ -145,29 +146,81 @@ def chat(req: ChatRequest):
                     "content": chat["message"]
                 })
 
-    completion = client.chat.completions.create(
-        model="deepseek-ai/deepseek-v4-pro",
+    stream = client.chat.completions.create(
+        model="deepseek-ai/deepseek-v4-flash",
         messages=messages,
         temperature=0.2,
         top_p=0.95,
-        max_tokens=200,
         extra_body={"chat_template_kwargs": {"thinking": False}},
+        stream=True,
     )
-    
-    reply = completion.choices[0].message.content
 
-    chat_store[req.id].append({
-        "role": "assistant",
-        "message": reply
-    })
+    full_reply = ""
 
+    # 생성기
+    def generate():
+        nonlocal full_reply
+
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+
+            delta = chunk.choices[0].delta
+
+            if delta and delta.content:
+                text = delta.content
+                full_reply += text
+                yield text
+
+        chat_store[req.id].append({
+            "role": "assistant",
+            "message": full_reply
+        })
+        
+    return StreamingResponse(
+        generate(),
+        media_type="text/plain; charset=utf-8",
+    )
+
+    print(chat_store)
+
+class StartChatRequest(BaseModel):
+    id: str
+
+@app.post("/chat/start")
+def start_chat(req: StartChatRequest):
+    scenario = next((s for s in scenarios if s["id"] == req.id), None)
+    if scenario is None:
+        return {"error": "Scenario not found"}
+    if req.id in chat_store and len(chat_store[req.id]) > 0:
+        first_ai_message = next(
+            (chat["message"] for chat in chat_store[req.id] if chat["role"] == "assistant"),
+            None
+        )
+        if first_ai_message:
+            return {
+                "reply": first_ai_message,
+                "id": req.id,
+                "status": "already_started"
+            }
+    opening_message = (
+        f"안녕하십니까. 저는 {scenario['country']} 측 대표입니다. "
+        f"오늘 협상 의제는 '{scenario['title']}'입니다. "
+        "우리 측은 이번 사안에 대해 신중한 입장을 가지고 있으며, "
+        "대한민국 측의 제안과 근거를 듣고 협의를 이어가고자 합니다. "
+        "먼저 한국 측의 기본 입장을 말씀해주시기 바랍니다."
+    )
+    chat_store[req.id] = [
+        {
+            "role": "assistant",
+            "message": opening_message
+        }
+    ]
     return {
-        "reply": reply,
+        "reply": opening_message,
         "id": req.id,
         "status": "ok"
     }
-
-    print(chat_store)
 
 @app.get("/report/{id}") 
 def report(id: str):
@@ -281,12 +334,11 @@ def report(id: str):
         ]
 
     completion = client.chat.completions.create(
-        model="deepseek-ai/deepseek-v4-pro",
+        model="deepseek-ai/deepseek-v4-flash",
         messages=messages,
         temperature=0.2,
         top_p=0.95,
         extra_body={"chat_template_kwargs": {"thinking": False}},
-        max_tokens=2000,
     )
 
     response = completion.choices[0].message.content
