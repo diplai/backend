@@ -3,17 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from openai import OpenAI
+from key_manager import get_client, next_client
 
 import json
 import os
 
 load_dotenv()
-
-client = OpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("OPENAI_KEY"),
-)
 
 app = FastAPI()
 
@@ -28,6 +23,16 @@ app.add_middleware(
 with open("data/scenarios.json", "r", encoding="utf-8") as f:
     scenarios = json.load(f)
 
+chat_store = {}
+
+class ChatRequest(BaseModel):
+    id: str
+    message: str
+    round: int | None = None
+
+
+class StartChatRequest(BaseModel):
+    id: str
 
 @app.get("/")
 def root():
@@ -207,30 +212,53 @@ opponent_constraints를 반드시 준수하라.
             }
         )
 
-    stream = client.chat.completions.create(
-        model="deepseek-ai/deepseek-v4-flash",
-        messages=messages,
-        temperature=0.2,
-        top_p=0.95,
-        extra_body={"chat_template_kwargs": {"thinking": False}},
-        stream=True,
-    )
-
     full_reply = ""
 
     def generate():
-        nonlocal full_reply
+        full_reply = ""
 
-        for chunk in stream:
-            if not chunk.choices:
-                continue
+        while True:
+            client = get_client()
 
-            delta = chunk.choices[0].delta
+            try:
+                stream = client.chat.completions.create(
+                    model="deepseek-ai/deepseek-v4-flash",
+                    messages=messages,
+                    temperature=0.2,
+                    top_p=0.95,
+                    extra_body={"chat_template_kwargs": {"thinking": False}},
+                    stream=True,
+                )
 
-            if delta and delta.content:
-                text = delta.content
-                full_reply += text
-                yield text
+                for chunk in stream:
+                    if chunk.choices:
+                        delta = chunk.choices[0].delta
+                        if delta and delta.content:
+                            text = delta.content
+                            full_reply += text
+                            yield text
+
+                break  # 정상 종료
+
+            except Exception as e:
+                error = str(e).lower()
+
+                is_limit = (
+                    "resourceexhausted" in error
+                    or "429" in error
+                    or "503" in error
+                    or "rate limit" in error
+                    or "quota" in error
+                )
+
+                if is_limit:
+                    if next_client() is not None:
+                        continue
+                    else:
+                        yield "\n[ERROR] API 키 모두 소진"
+                        return
+
+                raise
 
         chat_store[req.id].append(
             {
@@ -441,14 +469,34 @@ betterDirection
         },
     ]
 
-    completion = client.chat.completions.create(
-        model="deepseek-ai/deepseek-v4-flash",
-        messages=messages,
-        temperature=0.2,
-        top_p=0.95,
-        extra_body={"chat_template_kwargs": {"thinking": False}},
-        max_tokens=2500,
-    )
+    while True:
+        client = get_client()
+
+        try:
+            completion = client.chat.completions.create(
+                model="deepseek-ai/deepseek-v4-flash",
+                messages=messages,
+                temperature=0.2,
+                top_p=0.95,
+                extra_body={"chat_template_kwargs": {"thinking": False}},
+                max_tokens=2500,
+            )
+            break
+
+        except Exception as e:
+            error = str(e).lower()
+
+            if (
+                "resourceexhausted" in error
+                or "429" in error
+                or "503" in error
+                or "rate limit" in error
+                or "quota" in error
+            ):
+                if next_client() is not None:
+                    continue
+
+            raise
 
     response = completion.choices[0].message.content
 
