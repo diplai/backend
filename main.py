@@ -80,19 +80,6 @@ def get_scenario(id: str):
     }
 
 
-class ChatRequest(BaseModel):
-    id: str
-    message: str
-    round: int | None = None
-
-
-class StartChatRequest(BaseModel):
-    id: str
-
-
-chat_store = {}
-
-
 @app.post("/chat/start")
 def start_chat(req: StartChatRequest):
     scenario = next((s for s in scenarios if s["id"] == req.id), None)
