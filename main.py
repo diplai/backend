@@ -204,7 +204,7 @@ opponent_constraints를 반드시 준수하라.
     def generate():
         full_reply = ""
 
-        while True:
+        for _ in range(len(API_KEYS)):
             client = get_client()
 
             try:
@@ -228,6 +228,7 @@ opponent_constraints를 반드시 준수하라.
                 break  # 정상 종료
 
             except Exception as e:
+                print("[AI ERROR]", e)
                 error = str(e).lower()
 
                 is_limit = (
@@ -456,7 +457,7 @@ betterDirection
         },
     ]
 
-    while True:
+    for _ in range(len(API_KEYS)):
         client = get_client()
 
         try:
